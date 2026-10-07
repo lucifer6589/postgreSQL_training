@@ -1,7 +1,8 @@
 CREATE TABLE testing_table(
 name VARCHAR NOT NULL,
 contact_name VARCHAR,
-roll_no VARCHAR PRIMARY KEY
+roll_no VARCHAR,
+enroll_no INT PRIMARY KEY
 );
 SELECT * FROM testing_table;
 
