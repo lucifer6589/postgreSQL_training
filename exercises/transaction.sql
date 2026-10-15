@@ -18,62 +18,72 @@ ADD CONSTRAINT fk_accounts_users
 FOREIGN KEY (account_no) REFERENCES users(account_no);
 
 
-postgres=# \c bank;
+\c bank;
 You are now connected to database "bank" as user "postgres".
-bank=#
-bank=# -- deposit 1000 rupees
-bank=# BEGIN;
+
+-- deposit 1000 rupees
+BEGIN;
 BEGIN
-bank=*# UPDATE accounts
-bank-*# SET balance = balance + 1000
-bank-*# WHERE account_no = '1001';
-UPDATE 1
-bank=*# COMMIT;
-COMMIT
-bank=# SELECT * FROM accounts;
- id | account_no | balance
+UPDATE accounts
+SET balance = balance + 1000
+WHERE account_no = '1001';
+-- update takes lock automatically, and no extra is needed for update here
+
+COMMIT;
+SELECT * FROM accounts;
+id | account_no | balance
 ----+------------+---------
-  2 | 1002       | 3200.00
-  1 | 1001       | 6300.00
+2 | 1002       | 3200.00
+1 | 1001       | 6300.00
 (2 rows)
 
 
-bank=#
-bank=# -- withdraw 500 rupees
-bank=# BEGIN;
-BEGIN
-bank=*# UPDATE accounts
-bank-*# SET balance = balance - 500
-bank-*# WHERE account_no = '1001';
-UPDATE 1
-bank=*# COMMIT;
-COMMIT
-bank=# SELECT * FROM accounts;
- id | account_no | balance
+
+-- withdraw 500 rupees
+BEGIN;
+
+SELECT balance 
+FROM accounts 
+WHERE account_no = '1001' 
+FOR UPDATE; -- lock row
+
+UPDATE accounts
+SET balance = balance - 500
+WHERE account_no = '1001';
+
+
+COMMIT;
+SELECT * FROM accounts;
+id | account_no | balance
 ----+------------+---------
-  2 | 1002       | 3200.00
-  1 | 1001       | 5800.00
+2 | 1002       | 3200.00
+1 | 1001       | 5800.00
 (2 rows)
 
 
-bank=#
-bank=# -- A to B 200 rupees
-bank=# BEGIN ;
-BEGIN
-bank=*# UPDATE accounts
-bank-*# SET balance = balance + 200
-bank-*# WHERE account_no = '1002';
-UPDATE 1
-bank=*#
-bank=*# UPDATE accounts
-bank-*# SET balance = balance - 200
-bank-*# WHERE account_no = '1001';
-UPDATE 1
-bank=*# COMMIT;
-COMMIT
-bank=# SELECT * FROM accounts;
- id | account_no | balance
+
+-- A to B 200 rupees
+BEGIN ;
+
+
+SELECT account_no, balance 
+FROM accounts 
+WHERE account_no IN ('1001', '1002')
+FOR UPDATE; --lock rows
+
+UPDATE accounts
+SET balance = balance + 200
+WHERE account_no = '1002';
+
+UPDATE accounts
+SET balance = balance - 200
+WHERE account_no = '1001';
+
+COMMIT;
+
+SELECT * FROM accounts;
+id | account_no | balance
 ----+------------+---------
-  2 | 1002       | 3400.00
-  1 | 1001       | 5600.00
+2 | 1002       | 3400.00
+1 | 1001       | 5600.00
 (2 rows)
