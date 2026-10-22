@@ -50,6 +50,8 @@ CREATE INDEX idx_thread_messages_thread_id
 ON thread_messages(thread_id);
 CREATE INDEX idx_thread_messages_message
 ON thread_messages(message_id);
+CREATE INDEX idx_messages_sent_at
+ON messages(sent_at);
 
 
 --
